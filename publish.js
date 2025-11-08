@@ -173,7 +173,8 @@ async function main() {
 
     console.log(`✔ Published: ${post?.url || post?.canonical_url || post?.id}`);
     // Small pause to be nice to APIs
-    await sleep(2500);
+    await sleep(310000);
+
   }
 
   console.log("All done.");
