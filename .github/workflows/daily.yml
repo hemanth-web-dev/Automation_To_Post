@@ -1,0 +1,23 @@
+name: daily dev.to publish
+
+on:
+  schedule:
+    - cron: "30 3 * * *"  # 03:30 UTC = 09:00 IST, runs every day
+  workflow_dispatch: {}    # allow manual run for testing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # No deps; Node 20 has fetch built-in
+      - name: Run publisher
+        run: node publish.js
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
