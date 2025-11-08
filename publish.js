@@ -86,7 +86,7 @@ Constraints:
   if (m) title = `${m[1]} (${stamp})`;
 
   // Tags for dev.to (we'll also keep tags in body for readers)
-  const tags = ["ai", "machinelearning", "career", "productivity", "programming"];
+const tags = ["ai", "tech", "career", "productivity"];
 
   return { title, markdown: text, tags };
 }
