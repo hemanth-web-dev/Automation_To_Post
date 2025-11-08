@@ -53,20 +53,17 @@ Constraints:
 - Add a short conclusion.
 - Use clean Markdown only (no HTML).
 - Target length: ${length}.
-- Add 5–8 relevant tags (as a markdown list) at the end.
 - Title: put the title as the first markdown line starting with "# ".
 - DO NOT include YAML frontmatter.
-
 `;
 
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }]
-  };
+  // ✅ correct request body for Gemini
+  const reqBody = { contents: [{ parts: [{ text: prompt }] }] };
 
   const res = await fetch(GEMINI_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify(reqBody)
   });
 
   if (!res.ok) {
@@ -76,8 +73,7 @@ Constraints:
 
   const data = await res.json();
   const text =
-    data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("\n")?.trim() ||
-    "";
+    data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("\n")?.trim() || "";
 
   // Extract title (first line starting with "# ")
   let title = `AI & Tech • ${role} • ${stamp}`;
@@ -85,11 +81,12 @@ Constraints:
   const m = /^\s*#\s+(.+?)\s*$/.exec(firstLine);
   if (m) title = `${m[1]} (${stamp})`;
 
-  // Tags for dev.to (we'll also keep tags in body for readers)
-const tags = ["ai", "tech", "career", "productivity"];
+  // ✅ dev.to allows max 4 tags
+  const tags = ["ai", "tech", "career", "productivity"];
 
   return { title, markdown: text, tags };
 }
+
 
 /**
  * Publish a markdown article to dev.to
@@ -156,7 +153,16 @@ async function main() {
     const finalTitle = title.includes(stamp) ? title : `${title} (${stamp})`;
     const footer =
       `\n\n---\n*Auto-published via GitHub Actions • Topic: AI + Tech News & AI Career Advice • ${stamp}*`;
-    const body = markdown.endsWith(footer) ? markdown : markdown + footer;
+
+    // 🚿 strip any "tags" section Gemini might add in the markdown
+    let cleaned = markdown
+      // remove lines like "Tags:" or "Tag:"
+      .replace(/(^|\n)#{0,3}\s*tags?:\s*.*$/gim, "")
+      // remove single-word tag bullets at the end like "- ai", "- #machinelearning"
+      .replace(/(^|\n)-\s*#?[\w-]+$/gim, "");
+
+    const body = cleaned.endsWith(footer) ? cleaned : cleaned + footer;
+
 
     console.log(`Publishing to dev.to: "${finalTitle}"…`);
     const post = await publishToDevTo({
